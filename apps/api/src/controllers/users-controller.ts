@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { hashPassword, validatePasswordStrength } from '../services/auth-service.js';
-import { AppError } from '../middlewares/error-handler.js';
-import { toPublicUser } from './auth-controller.js';
+import { prisma } from '../lib/prisma';
+import { hashPassword, validatePasswordStrength } from '../services/auth-service';
+import { AppError } from '../middlewares/error-handler';
+import { toPublicUser } from './auth-controller';
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -36,7 +36,8 @@ export async function listUsers(
 
 export async function getUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    const userId = String(req.params.id);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError(404, 'Utilisateur introuvable', 'NOT_FOUND');
     res.json({ success: true, data: { user: toPublicUser(user) } });
   } catch (err) {
@@ -86,12 +87,11 @@ export async function updateUser(
 ): Promise<void> {
   try {
     const data = updateUserSchema.parse(req.body);
-    const userId = req.params.id;
+    const userId = String(req.params.id);
 
     const existing = await prisma.user.findUnique({ where: { id: userId } });
     if (!existing) throw new AppError(404, 'Utilisateur introuvable', 'NOT_FOUND');
 
-    // Protection : un admin ne peut pas retirer son propre rôle admin
     if (
       req.user?.userId === userId &&
       existing.role === 'admin' &&
@@ -100,16 +100,15 @@ export async function updateUser(
     ) {
       throw new AppError(
         400,
-        'Vous ne pouvez pas retirer votre propre rôle administrateur',
+        'Vous ne pouvez pas retirer votre propre role administrateur',
         'SELF_DEMOTION',
       );
     }
 
-    // Protection : un admin ne peut pas se désactiver lui-même via update
     if (req.user?.userId === userId && data.isActive === false) {
       throw new AppError(
         400,
-        'Vous ne pouvez pas vous désactiver vous-même',
+        'Vous ne pouvez pas vous desactiver vous-meme',
         'SELF_DEACTIVATE',
       );
     }
@@ -117,7 +116,7 @@ export async function updateUser(
     if (data.email && data.email !== existing.email) {
       const emailTaken = await prisma.user.findUnique({ where: { email: data.email } });
       if (emailTaken) {
-        throw new AppError(409, 'Email déjà utilisé', 'EMAIL_EXISTS');
+        throw new AppError(409, 'Email deja utilise', 'EMAIL_EXISTS');
       }
     }
 
@@ -152,10 +151,10 @@ export async function deactivateUser(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const userId = req.params.id;
+    const userId = String(req.params.id);
 
     if (req.user?.userId === userId) {
-      throw new AppError(400, 'Vous ne pouvez pas vous désactiver vous-même', 'SELF_DEACTIVATE');
+      throw new AppError(400, 'Vous ne pouvez pas vous desactiver vous-meme', 'SELF_DEACTIVATE');
     }
 
     const existing = await prisma.user.findUnique({ where: { id: userId } });
