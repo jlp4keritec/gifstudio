@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # ============================================================================
-# Stage 1 : deps - install des dépendances avec pnpm
+# Stage 1 : deps
 # ============================================================================
 FROM node:22-alpine AS deps
 
@@ -17,7 +17,7 @@ COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile --filter "@gifstudio/shared..." --filter "web..."
 
 # ============================================================================
-# Stage 2 : builder - build Next.js standalone
+# Stage 2 : builder
 # ============================================================================
 FROM node:22-alpine AS builder
 
@@ -35,7 +35,9 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
 
-# La variable doit être disponible AU BUILD pour être inlined dans les bundles JS
+# S'assure que le dossier public existe (Next.js le requiert au runtime)
+RUN mkdir -p apps/web/public
+
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -43,7 +45,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter web build
 
 # ============================================================================
-# Stage 3 : runner - image finale légère avec Next.js standalone
+# Stage 3 : runner
 # ============================================================================
 FROM node:22-alpine AS runner
 
@@ -57,9 +59,10 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copie l'output standalone de Next.js
+# Output standalone Next.js
 COPY --from=builder --chown=nodejs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nodejs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+# public/ existe forcement maintenant (cree dans le builder)
 COPY --from=builder --chown=nodejs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nodejs
