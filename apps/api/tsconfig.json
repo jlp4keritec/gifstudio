@@ -1,13 +1,33 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "types": ["node"]
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "../../",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "types": ["node"],
+    "paths": {
+      "@gifstudio/shared": ["../../packages/shared/src/index.ts"],
+      "@gifstudio/shared/*": ["../../packages/shared/src/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "prisma"]
+  "include": [
+    "src/**/*",
+    "../../packages/shared/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "prisma"
+  ]
 }
