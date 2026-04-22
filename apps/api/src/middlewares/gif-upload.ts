@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { AppError } from './error-handler.js';
+import { AppError } from './error-handler';
 
 const GIF_MAX_MB = 25;
 

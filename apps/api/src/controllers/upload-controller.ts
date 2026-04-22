@@ -1,16 +1,16 @@
 import type { Request, Response, NextFunction } from 'express';
 import fs from 'node:fs/promises';
-import { AppError } from '../middlewares/error-handler.js';
+import { AppError } from '../middlewares/error-handler';
 import {
   generateFilename,
   getFilePath,
   getPublicUrl,
   moveToTrash,
-} from '../services/storage-service.js';
+} from '../services/storage-service';
 import {
   getExtensionFromMime,
   validateVideoBuffer,
-} from '../services/video-validation-service.js';
+} from '../services/video-validation-service';
 
 export async function uploadVideo(
   req: Request,
@@ -62,7 +62,7 @@ export async function deleteUploadedVideo(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { filename } = req.params;
+    const filename = String(req.params.filename ?? '');
 
     if (!filename || !/^[a-f0-9-]+\.(mp4|mov|webm)$/i.test(filename)) {
       throw new AppError(400, 'Nom de fichier invalide', 'INVALID_FILENAME');

@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import type { UserRole } from '@prisma/client';
-import { env } from '../config/env.js';
+import { env } from '../config/env';
 
 export interface JwtPayload {
   userId: string;

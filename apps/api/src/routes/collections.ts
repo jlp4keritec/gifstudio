@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as collectionsController from '../controllers/collections-controller.js';
-import { requireAuth } from '../middlewares/auth.js';
+import * as collectionsController from '../controllers/collections-controller';
+import { requireAuth } from '../middlewares/auth';
 
 const router = Router();
 

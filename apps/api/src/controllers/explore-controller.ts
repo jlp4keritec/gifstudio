@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { AppError } from '../middlewares/error-handler.js';
+import { prisma } from '../lib/prisma';
+import { AppError } from '../middlewares/error-handler';
 
 const exploreQuerySchema = z.object({
   sort: z.enum(['trending', 'recent']).default('recent'),
@@ -114,19 +114,13 @@ export async function explore(
   }
 }
 
-/**
- * Récupère un GIF public par son slug.
- * Incrémente le compteur de vues sauf :
- * - Si l'utilisateur est le propriétaire
- * - Si la requête provient d'un iframe embed (query ?embed=1)
- */
 export async function getGifBySlug(
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
-    const { slug } = req.params;
+    const slug = String(req.params.slug);
     const isEmbed = req.query.embed === '1';
 
     const gif = await prisma.gif.findUnique({
@@ -141,10 +135,10 @@ export async function getGifBySlug(
 
     const isOwner = req.user?.userId === gif.ownerId;
     if (!gif.isPublic && !isOwner) {
-      throw new AppError(403, 'Ce GIF est privé', 'FORBIDDEN');
+      throw new AppError(403, 'Ce GIF est prive', 'FORBIDDEN');
     }
 
-    // Incrément de vue uniquement sur visite "réelle" (pas embed, pas owner)
+    // Increment de vue uniquement sur visite "reelle"
     if (!isOwner && !isEmbed) {
       await prisma.gif.update({
         where: { id: gif.id },

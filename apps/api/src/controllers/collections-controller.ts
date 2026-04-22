@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { AppError } from '../middlewares/error-handler.js';
+import { prisma } from '../lib/prisma';
+import { AppError } from '../middlewares/error-handler';
 
 const createCollectionSchema = z.object({
   name: z.string().min(1).max(255),
@@ -45,7 +45,7 @@ export async function listMyCollections(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
 
     const collections = await prisma.collection.findMany({
       where: { ownerId: req.user.userId },
@@ -80,8 +80,10 @@ export async function getCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
+    const collectionId = String(req.params.id);
+
     const collection = await prisma.collection.findUnique({
-      where: { id: req.params.id },
+      where: { id: collectionId },
       include: {
         gifs: {
           orderBy: { addedAt: 'desc' },
@@ -95,7 +97,7 @@ export async function getCollection(
 
     const isOwner = req.user?.userId === collection.ownerId;
     if (!collection.isPublic && !isOwner) {
-      throw new AppError(403, 'Accès refusé', 'FORBIDDEN');
+      throw new AppError(403, 'Acces refuse', 'FORBIDDEN');
     }
 
     const gifs = collection.gifs.map((cg) => ({
@@ -133,7 +135,7 @@ export async function createCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
 
     const data = createCollectionSchema.parse(req.body);
 
@@ -161,17 +163,18 @@ export async function updateCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
     const data = updateCollectionSchema.parse(req.body);
+    const collectionId = String(req.params.id);
 
-    const existing = await prisma.collection.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.collection.findUnique({ where: { id: collectionId } });
     if (!existing) throw new AppError(404, 'Collection introuvable', 'NOT_FOUND');
     if (existing.ownerId !== req.user.userId) {
-      throw new AppError(403, 'Accès refusé', 'FORBIDDEN');
+      throw new AppError(403, 'Acces refuse', 'FORBIDDEN');
     }
 
     const updated = await prisma.collection.update({
-      where: { id: req.params.id },
+      where: { id: collectionId },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
@@ -208,15 +211,16 @@ export async function deleteCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
+    const collectionId = String(req.params.id);
 
-    const existing = await prisma.collection.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.collection.findUnique({ where: { id: collectionId } });
     if (!existing) throw new AppError(404, 'Collection introuvable', 'NOT_FOUND');
     if (existing.ownerId !== req.user.userId) {
-      throw new AppError(403, 'Accès refusé', 'FORBIDDEN');
+      throw new AppError(403, 'Acces refuse', 'FORBIDDEN');
     }
 
-    await prisma.collection.delete({ where: { id: req.params.id } });
+    await prisma.collection.delete({ where: { id: collectionId } });
 
     res.json({ success: true, data: { deleted: true } });
   } catch (err) {
@@ -230,9 +234,10 @@ export async function addGifToCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
+    const collectionId = String(req.params.id);
 
-    const collection = await prisma.collection.findUnique({ where: { id: req.params.id } });
+    const collection = await prisma.collection.findUnique({ where: { id: collectionId } });
     if (!collection || collection.ownerId !== req.user.userId) {
       throw new AppError(404, 'Collection introuvable', 'NOT_FOUND');
     }
@@ -262,9 +267,10 @@ export async function removeGifFromCollection(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
 
-    const { id: collectionId, gifId } = req.params;
+    const collectionId = String(req.params.id);
+    const gifId = String(req.params.gifId);
 
     const collection = await prisma.collection.findUnique({ where: { id: collectionId } });
     if (!collection || collection.ownerId !== req.user.userId) {

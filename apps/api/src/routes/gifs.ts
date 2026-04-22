@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as gifsController from '../controllers/gifs-controller.js';
-import { requireAuth } from '../middlewares/auth.js';
-import { gifUpload } from '../middlewares/gif-upload.js';
+import * as gifsController from '../controllers/gifs-controller';
+import { requireAuth } from '../middlewares/auth';
+import { gifUpload } from '../middlewares/gif-upload';
 
 const router = Router();
 

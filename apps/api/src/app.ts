@@ -4,10 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import path from 'node:path';
-import { env } from './config/env.js';
-import { apiRouter } from './routes/index.js';
-import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
-import { optionalAuth } from './middlewares/optional-auth.js';
+import { env } from './config/env';
+import { apiRouter } from './routes/index';
+import { errorHandler, notFoundHandler } from './middlewares/error-handler';
+import { optionalAuth } from './middlewares/optional-auth';
 
 export function createApp(): express.Application {
   const app = express();

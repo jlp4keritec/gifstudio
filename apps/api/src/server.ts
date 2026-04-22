@@ -1,6 +1,6 @@
-import { createApp } from './app.js';
-import { env } from './config/env.js';
-import { initStorage } from './services/storage-service.js';
+import { createApp } from './app';
+import { env } from './config/env';
+import { initStorage } from './services/storage-service';
 
 async function main() {
   await initStorage();

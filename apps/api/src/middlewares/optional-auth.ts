@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../services/auth-service.js';
-import { prisma } from '../lib/prisma.js';
+import { verifyToken } from '../services/auth-service';
+import { prisma } from '../lib/prisma';
 
 const AUTH_COOKIE_NAME = 'gifstudio_token';
 

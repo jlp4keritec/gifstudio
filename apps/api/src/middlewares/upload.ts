@@ -1,7 +1,7 @@
 import multer from 'multer';
-import { env } from '../config/env.js';
+import { env } from '../config/env';
 import { UPLOAD_CONSTRAINTS } from '@gifstudio/shared';
-import { AppError } from './error-handler.js';
+import { AppError } from './error-handler';
 
 const storage = multer.memoryStorage();
 

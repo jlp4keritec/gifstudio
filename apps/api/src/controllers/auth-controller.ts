@@ -1,16 +1,16 @@
 import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 import {
   hashPassword,
   verifyPassword,
   signToken,
   validatePasswordStrength,
-} from '../services/auth-service.js';
-import { AUTH_COOKIE_NAME } from '../middlewares/auth.js';
-import { resetLoginAttempts } from '../middlewares/rate-limit.js';
-import { AppError } from '../middlewares/error-handler.js';
-import { env } from '../config/env.js';
+} from '../services/auth-service';
+import { AUTH_COOKIE_NAME } from '../middlewares/auth';
+import { resetLoginAttempts } from '../middlewares/rate-limit';
+import { AppError } from '../middlewares/error-handler';
+import { env } from '../config/env';
 
 const loginSchema = z.object({
   identifier: z.string().min(1),

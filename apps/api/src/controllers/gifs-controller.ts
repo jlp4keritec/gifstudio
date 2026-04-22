@@ -1,19 +1,19 @@
 import type { Request, Response, NextFunction } from 'express';
 import fs from 'node:fs/promises';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma.js';
-import { AppError } from '../middlewares/error-handler.js';
+import { prisma } from '../lib/prisma';
+import { AppError } from '../middlewares/error-handler';
 import {
   generateFilename,
   getFilePath,
   getPublicUrl,
   moveToTrash,
-} from '../services/storage-service.js';
-import { generateSlug } from '../services/slug-service.js';
+} from '../services/storage-service';
+import { generateSlug } from '../services/slug-service';
 import {
   generateThumbnailFromGif,
   getGifDimensions,
-} from '../services/thumbnail-service.js';
+} from '../services/thumbnail-service';
 
 function parseJsonArrayField(value: unknown): string[] {
   if (value === undefined || value === null || value === '') return [];
@@ -90,8 +90,8 @@ function serializeGif(gif: {
 
 export async function saveGif(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
-    if (!req.file) throw new AppError(400, 'Aucun GIF reçu', 'NO_FILE');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
+    if (!req.file) throw new AppError(400, 'Aucun GIF recu', 'NO_FILE');
 
     const base = saveGifBodySchema.parse({
       title: req.body.title,
@@ -114,11 +114,11 @@ export async function saveGif(req: Request, res: Response, next: NextFunction): 
 
     const invalidCatIds = categoryIds.filter((id) => !uuidRegex.test(id));
     if (invalidCatIds.length > 0) {
-      throw new AppError(400, 'Identifiants de catégorie invalides', 'INVALID_CATEGORY_IDS');
+      throw new AppError(400, 'Identifiants de categorie invalides', 'INVALID_CATEGORY_IDS');
     }
 
     if (req.file.mimetype !== 'image/gif') {
-      throw new AppError(400, 'Le fichier doit être un GIF', 'INVALID_TYPE');
+      throw new AppError(400, 'Le fichier doit etre un GIF', 'INVALID_TYPE');
     }
 
     if (collectionIds.length > 0) {
@@ -137,7 +137,7 @@ export async function saveGif(req: Request, res: Response, next: NextFunction): 
         select: { id: true },
       });
       if (found.length !== categoryIds.length) {
-        throw new AppError(400, 'Catégories invalides', 'INVALID_CATEGORIES');
+        throw new AppError(400, 'Categories invalides', 'INVALID_CATEGORIES');
       }
     }
 
@@ -158,7 +158,7 @@ export async function saveGif(req: Request, res: Response, next: NextFunction): 
       slug = generateSlug();
       attempts++;
       if (attempts > 5) {
-        throw new AppError(500, 'Impossible de générer un slug unique', 'SLUG_COLLISION');
+        throw new AppError(500, 'Impossible de generer un slug unique', 'SLUG_COLLISION');
       }
     }
 
@@ -204,7 +204,7 @@ export async function listMyGifs(
   next: NextFunction,
 ): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
     const gifs = await prisma.gif.findMany({
       where: { ownerId: req.user.userId },
       orderBy: { createdAt: 'desc' },
@@ -217,12 +217,13 @@ export async function listMyGifs(
 
 export async function getGif(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const gif = await prisma.gif.findUnique({ where: { id: req.params.id } });
+    const gifId = String(req.params.id);
+    const gif = await prisma.gif.findUnique({ where: { id: gifId } });
     if (!gif) throw new AppError(404, 'GIF introuvable', 'NOT_FOUND');
 
     const isOwner = req.user?.userId === gif.ownerId;
     if (!gif.isPublic && !isOwner) {
-      throw new AppError(403, 'Accès refusé', 'FORBIDDEN');
+      throw new AppError(403, 'Acces refuse', 'FORBIDDEN');
     }
 
     res.json({ success: true, data: { gif: serializeGif(gif) } });
@@ -233,9 +234,10 @@ export async function getGif(req: Request, res: Response, next: NextFunction): P
 
 export async function deleteGif(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    if (!req.user) throw new AppError(401, 'Non authentifié', 'UNAUTHORIZED');
+    if (!req.user) throw new AppError(401, 'Non authentifie', 'UNAUTHORIZED');
+    const gifId = String(req.params.id);
 
-    const gif = await prisma.gif.findUnique({ where: { id: req.params.id } });
+    const gif = await prisma.gif.findUnique({ where: { id: gifId } });
     if (!gif) throw new AppError(404, 'GIF introuvable', 'NOT_FOUND');
 
     if (gif.ownerId !== req.user.userId && req.user.role !== 'admin') {

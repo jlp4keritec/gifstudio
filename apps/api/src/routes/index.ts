@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { authRouter } from './auth.js';
-import { usersRouter } from './users.js';
-import { uploadRouter } from './upload.js';
-import { gifsRouter } from './gifs.js';
-import { collectionsRouter } from './collections.js';
-import { publicRouter } from './public.js';
+import { authRouter } from './auth';
+import { usersRouter } from './users';
+import { uploadRouter } from './upload';
+import { gifsRouter } from './gifs';
+import { collectionsRouter } from './collections';
+import { publicRouter } from './public';
 
 const router = Router();
 

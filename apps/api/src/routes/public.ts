@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as exploreController from '../controllers/explore-controller.js';
-import * as categoriesController from '../controllers/categories-controller.js';
+import * as exploreController from '../controllers/explore-controller';
+import * as categoriesController from '../controllers/categories-controller';
 
 const router = Router();
 

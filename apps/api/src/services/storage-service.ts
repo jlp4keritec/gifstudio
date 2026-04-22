@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { env } from '../config/env.js';
+import { env } from '../config/env';
 
 export type StorageFolder = 'videos' | 'gifs' | 'thumbnails' | 'trash';
 

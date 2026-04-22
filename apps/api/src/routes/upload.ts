@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as uploadController from '../controllers/upload-controller.js';
-import { requireAuth } from '../middlewares/auth.js';
-import { videoUpload } from '../middlewares/upload.js';
+import * as uploadController from '../controllers/upload-controller';
+import { requireAuth } from '../middlewares/auth';
+import { videoUpload } from '../middlewares/upload';
 
 const router = Router();
 

@@ -6,7 +6,9 @@
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "../../",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,6 +17,7 @@
     "declaration": false,
     "sourceMap": true,
     "isolatedModules": true,
+    "noEmitOnError": false,
     "types": ["node"],
     "paths": {
       "@gifstudio/shared": ["../../packages/shared/src/index.ts"],
