@@ -54,11 +54,13 @@ ENV PORT=4000
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 
-# IMPORTANT : on copie le shared SOURCE puis on REMPLACE par le compile
-# Cela permet a @gifstudio/shared (workspace symlink) de trouver le JS au runtime
+# On copie le shared SOURCE (pour les types) puis on REMPLACE par le compile
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared ./packages/shared
-# Copie les .js compiles par-dessus les .ts (qui restent presents mais ignores)
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist/packages/shared/src ./packages/shared/src
+
+# On remplace le package.json du shared installe dans node_modules pour pointer vers le JS
+# (au runtime uniquement, pas dans le repo source)
+RUN echo '{"name":"@gifstudio/shared","version":"0.1.0","main":"./src/index.js","types":"./src/index.ts"}' > /app/packages/shared/package.json
 
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/prisma ./apps/api/prisma
