@@ -1,20 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { UserRole } from '@prisma/client';
-import { verifyToken, type JwtPayload } from '../services/auth-service.js';
-import { AppError } from './error-handler.js';
-import { prisma } from '../lib/prisma.js';
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: JwtPayload;
-  }
-}
+import { verifyToken, type JwtPayload } from '../services/auth-service';
+import { AppError } from './error-handler';
+import { prisma } from '../lib/prisma';
 
 const AUTH_COOKIE_NAME = 'gifstudio_token';
 
 function extractToken(req: Request): string | null {
   const cookieToken = req.cookies?.[AUTH_COOKIE_NAME];
-  if (cookieToken) return cookieToken;
+  if (cookieToken && typeof cookieToken === 'string') return cookieToken;
 
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
@@ -52,7 +46,7 @@ export async function requireAuth(
     if (err instanceof AppError) {
       next(err);
     } else {
-      next(new AppError(401, 'Token invalide ou expiré', 'INVALID_TOKEN'));
+      next(new AppError(401, 'Token invalide ou expire', 'INVALID_TOKEN'));
     }
   }
 }
@@ -62,7 +56,7 @@ export function requireRole(...allowedRoles: UserRole[]) {
     if (!req.user) {
       return next(new AppError(401, 'Authentification requise', 'UNAUTHORIZED'));
     }
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!allowedRoles.includes(req.user.role as UserRole)) {
       return next(new AppError(403, 'Permissions insuffisantes', 'FORBIDDEN'));
     }
     next();
