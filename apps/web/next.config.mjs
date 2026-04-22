@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
+  outputFileTracingRoot: process.env.NODE_ENV === 'production' ? undefined : undefined,
   transpilePackages: ['@gifstudio/shared'],
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
@@ -20,7 +22,7 @@ const nextConfig = {
         source: '/embed/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'ALLOWALL' },
-          { key: 'Content-Security-Policy', value: "frame-ancestors *" },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
         ],
       },
     ];

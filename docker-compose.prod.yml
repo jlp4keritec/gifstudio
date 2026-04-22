@@ -1,0 +1,92 @@
+name: gifstudio
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gifstudio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - gifstudio-postgres-data:/var/lib/postgresql/data
+    networks:
+      - gifstudio-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    # Pas de port exposé : seul le réseau interne y accède
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: gifstudio-api:latest
+    container_name: gifstudio-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      FORCE_PASSWORD_CHANGE: ${FORCE_PASSWORD_CHANGE:-true}
+      CORS_ORIGIN: ${PUBLIC_URL}
+      STORAGE_ROOT: /app/apps/api/storage
+      MAX_VIDEO_SIZE_MB: 50
+    volumes:
+      # Storage persistant sur l'hôte (vidéos, GIFs, thumbnails, trash)
+      - ${STORAGE_PATH}:/app/apps/api/storage
+    ports:
+      # Exposé uniquement sur localhost (Nginx du host fait le proxy)
+      - "127.0.0.1:4002:4000"
+    networks:
+      - gifstudio-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api/v1
+    image: gifstudio-web:latest
+    container_name: gifstudio-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api/v1
+    ports:
+      # Exposé uniquement sur localhost (Nginx du host fait le proxy)
+      - "127.0.0.1:3002:3000"
+    networks:
+      - gifstudio-network
+
+networks:
+  gifstudio-network:
+    name: gifstudio-network
+    driver: bridge
+
+volumes:
+  gifstudio-postgres-data:
+    name: gifstudio-postgres-data
