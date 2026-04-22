@@ -4,7 +4,6 @@
 # ============================================================================
 FROM node:22-alpine AS deps
 
-# openssl indispensable pour Prisma engine
 RUN apk add --no-cache libc6-compat openssl python3 make g++ \
     && corepack enable \
     && corepack prepare pnpm@9.12.0 --activate
@@ -36,10 +35,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-# Genere le Prisma Client (binaire linux-musl-openssl-3.0.x grace a binaryTargets)
 RUN cd apps/api && pnpm prisma generate
-
-# Compile TypeScript
 RUN cd apps/api && pnpm build
 
 # ============================================================================
@@ -47,7 +43,6 @@ RUN cd apps/api && pnpm build
 # ============================================================================
 FROM node:22-alpine AS runner
 
-# IMPORTANT : openssl + libssl dans le runner aussi (Prisma en a besoin a l'execution)
 RUN addgroup -S nodejs && adduser -S nodejs -G nodejs \
     && apk add --no-cache libc6-compat openssl tini
 
@@ -58,7 +53,12 @@ ENV PORT=4000
 
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
+
+# IMPORTANT : on copie le shared SOURCE puis on REMPLACE par le compile
+# Cela permet a @gifstudio/shared (workspace symlink) de trouver le JS au runtime
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared ./packages/shared
+# Copie les .js compiles par-dessus les .ts (qui restent presents mais ignores)
+COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist/packages/shared/src ./packages/shared/src
 
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/prisma ./apps/api/prisma
